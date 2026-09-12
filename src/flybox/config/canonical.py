@@ -6,7 +6,7 @@ import hashlib
 import json
 import math
 from collections.abc import Mapping, Sequence
-from typing import Any
+from typing import Any, cast
 
 _BIOLOGICAL_ID_KEYS = {
     "biological_id",
@@ -29,12 +29,14 @@ class CanonicalConfigError(ValueError):
 def merge_defaults(defaults: Mapping[str, Any], config: Mapping[str, Any]) -> dict[str, Any]:
     """Recursively apply defaults while letting explicit config win."""
 
-    merged: dict[str, Any] = {}
-    for key, value in defaults.items():
-        merged[key] = value
+    merged = dict(defaults)
     for key, value in config.items():
-        if isinstance(value, Mapping) and isinstance(merged.get(key), Mapping):
-            merged[key] = merge_defaults(merged[key], value)  # type: ignore[arg-type]
+        current = merged.get(key)
+        if isinstance(value, Mapping) and isinstance(current, Mapping):
+            merged[key] = merge_defaults(
+                cast(Mapping[str, Any], current),
+                cast(Mapping[str, Any], value),
+            )
         else:
             merged[key] = value
     return merged
@@ -48,10 +50,11 @@ def _canonicalize(value: Any, path: str = "$") -> Any:
             raise CanonicalConfigError(f"{path}: non-finite numbers are not allowed")
         return value
     if isinstance(value, Mapping):
+        keys = tuple(value.keys())
+        if any(not isinstance(key, str) or not key for key in keys):
+            raise CanonicalConfigError(f"{path}: mapping keys must be non-empty strings")
         result: dict[str, Any] = {}
-        for raw_key in sorted(value):
-            if not isinstance(raw_key, str) or not raw_key:
-                raise CanonicalConfigError(f"{path}: mapping keys must be non-empty strings")
+        for raw_key in sorted(cast(tuple[str, ...], keys)):
             child = value[raw_key]
             child_path = f"{path}.{raw_key}"
             if raw_key in _BIOLOGICAL_ID_KEYS:
