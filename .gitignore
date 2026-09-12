@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.dylib
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# FlyBox datasets and mutable runtime state
+/data/
+/datasets/
+/runs/
+/checkpoints/
+/artifacts/
+benchmarks/local/
+*.npz
+*.npy
+*.feather
+*.parquet
+*.arrow
+
+# Local environment / secrets
+.env
+.env.*
+!.env.example
+
+# Native builds
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+compile_commands.json
+
+# Unreal Engine generated state (viewer is planned post-V0)
+viewer/ue5/Binaries/
+viewer/ue5/DerivedDataCache/
+viewer/ue5/Intermediate/
+viewer/ue5/Saved/
+viewer/ue5/.vs/
