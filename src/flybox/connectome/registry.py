@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from flybox.config import ProfileKind, ProfileRegistry
 from flybox.provenance.licenses import validate_license_id
@@ -62,6 +63,16 @@ def _nonempty_string(value: Any, path: str) -> str:
     return value.strip()
 
 
+def _https_url(value: Any, path: str) -> str:
+    url = _nonempty_string(value, path)
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise DatasetRegistryError(f"{path}: expected absolute HTTPS URL")
+    if parsed.username is not None or parsed.password is not None:
+        raise DatasetRegistryError(f"{path}: embedded URL credentials are not allowed")
+    return url
+
+
 def _optional_sha256(value: Any, path: str) -> str | None:
     if value is None:
         return None
@@ -106,7 +117,7 @@ def load_dataset_spec(config_root: Path, profile_id: str) -> DatasetSpec:
     license_id = validate_license_id(
         _nonempty_string(config.get("license_id"), "config.license_id")
     )
-    source_page = _nonempty_string(config.get("source_page"), "config.source_page")
+    source_page = _https_url(config.get("source_page"), "config.source_page")
     source_checked = _nonempty_string(config.get("source_checked"), "config.source_checked")
     attribution = _nonempty_string(config.get("attribution"), "config.attribution")
 
@@ -129,7 +140,7 @@ def load_dataset_spec(config_root: Path, profile_id: str) -> DatasetSpec:
                     raw.get("filename"),
                     f"config.files.{key}.filename",
                 ),
-                url=_nonempty_string(raw.get("url"), f"config.files.{key}.url"),
+                url=_https_url(raw.get("url"), f"config.files.{key}.url"),
                 expected_sha256=_optional_sha256(
                     raw.get("expected_sha256"),
                     f"config.files.{key}.expected_sha256",
