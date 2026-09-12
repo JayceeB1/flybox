@@ -1,0 +1,14 @@
+{
+  "schema": "flybox.provenance/v1",
+  "id": "adapted-kernel",
+  "kind": "neural_backend",
+  "version": "0.1.0",
+  "evidence": "modeled",
+  "license_id": "MIT",
+  "code_revision": "cafebabe",
+  "inclusion_state": "adapted-code",
+  "adapted_from": {
+    "project": "example/upstream",
+    "source_files": ["kernel.cpp"]
+  }
+}
