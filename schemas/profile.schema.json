@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flybox.dev/schemas/profile.schema.json",
+  "title": "FlyBox profile v1",
+  "type": "object",
+  "required": ["schema", "kind", "id", "version", "config"],
+  "properties": {
+    "schema": {"const": "flybox.profile/v1"},
+    "kind": {
+      "enum": [
+        "dataset",
+        "normalization",
+        "brain",
+        "body",
+        "sensory_bridge",
+        "motor_bridge",
+        "scheduler",
+        "experiment",
+        "assay"
+      ]
+    },
+    "id": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "minLength": 1},
+    "defaults": {"type": "object"},
+    "config": {"type": "object"},
+    "references": {
+      "type": "object",
+      "additionalProperties": {"type": "string", "minLength": 1}
+    }
+  },
+  "additionalProperties": false
+}
