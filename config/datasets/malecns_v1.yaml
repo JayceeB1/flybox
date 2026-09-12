@@ -1,0 +1,28 @@
+schema: flybox.profile/v1
+kind: dataset
+id: malecns_v1
+version: "1"
+config:
+  release: MaleCNS v1.0
+  license_id: CC-BY-4.0
+  source_page: https://male-cns.janelia.org/download/
+  source_checked: "2026-09-12"
+  attribution: >-
+    FlyEM at HHMI Janelia, University of Cambridge, MRC Laboratory of Molecular
+    Biology, and Google Research — MaleCNS v1.0.
+  files:
+    annotations:
+      filename: body-annotations-male-cns-v1.0-minconf-0.5.feather
+      url: https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-annotations-male-cns-v1.0-minconf-0.5.feather
+      expected_sha256: null
+      expected_bytes: null
+    neurotransmitters:
+      filename: body-neurotransmitters-male-cns-v1.0.feather
+      url: https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/body-neurotransmitters-male-cns-v1.0.feather
+      expected_sha256: null
+      expected_bytes: null
+    edges:
+      filename: connectome-weights-male-cns-v1.0-minconf-0.5.feather
+      url: https://storage.googleapis.com/flyem-male-cns/v1.0/connectome-data/flat-connectome/connectome-weights-male-cns-v1.0-minconf-0.5.feather
+      expected_sha256: null
+      expected_bytes: null
