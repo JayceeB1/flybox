@@ -24,7 +24,7 @@ dependencies = [
 
 [project.optional-dependencies]
 data = [
-  "numpy>=2.0,<3",
+  "numpy>=2.0,<2.5",
   "pyarrow>=18,<26",
 ]
 dev = [
@@ -32,7 +32,7 @@ dev = [
   "ruff>=0.6",
   "mypy>=1.11",
   "types-PyYAML>=6.0.12",
-  "numpy>=2.0,<3",
+  "numpy>=2.0,<2.5",
   "pyarrow>=18,<26",
 ]
 
@@ -54,3 +54,7 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.11"
 strict = true
 packages = ["flybox"]
+
+[[tool.mypy.overrides]]
+module = ["pyarrow", "pyarrow.*"]
+ignore_missing_imports = true
