@@ -12,7 +12,7 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import BinaryIO, Protocol
+from typing import Protocol
 
 from flybox.provenance.schema import validate_manifest
 
@@ -62,12 +62,18 @@ def _atomic_json(path: Path, payload: object) -> None:
     os.replace(partial, path)
 
 
-def _verify_existing(path: Path, spec: DatasetFileSpec, *, allow_unpinned: bool) -> tuple[str, int]:
+def _verify_existing(
+    path: Path,
+    spec: DatasetFileSpec,
+    *,
+    allow_unpinned: bool,
+) -> tuple[str, int]:
     digest, size = sha256_file(path)
     if spec.expected_sha256 is None or spec.expected_bytes is None:
         if not allow_unpinned:
             raise AcquisitionError(
-                f"{spec.key}: source is not pinned; use --bootstrap-hashes for an explicit audit run"
+                f"{spec.key}: source is not pinned; use --bootstrap-hashes "
+                "for an explicit audit run"
             )
         return digest, size
     if digest != spec.expected_sha256 or size != spec.expected_bytes:
