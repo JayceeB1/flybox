@@ -18,7 +18,9 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = []
+dependencies = [
+  "PyYAML>=6.0.2,<7",
+]
 
 [project.optional-dependencies]
 dev = [
