@@ -18,13 +18,16 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Topic :: Scientific/Engineering",
 ]
-dependencies = []
+dependencies = [
+  "PyYAML>=6.0.2,<7",
+]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8",
   "ruff>=0.6",
   "mypy>=1.11",
+  "types-PyYAML>=6.0.12",
 ]
 
 [tool.setuptools.packages.find]
