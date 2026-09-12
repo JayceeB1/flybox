@@ -94,9 +94,18 @@ def write_fixture_source(config_root: Path, data_dir: Path) -> Path:
                 ["descending_neuron", "glia", "sensory", None],
                 type=pa.string(),
             ),
-            "status": pa.array(["Traced", "Glia", "Traced", "Traced"], type=pa.string()),
-            "type": pa.array(["DN-test", "glia-test", "R-test", None], type=pa.string()),
-            "statusLabel": pa.array(["good", "good", "good", "uncertain"], type=pa.string()),
+            "status": pa.array(
+                ["Traced", "Glia", "Traced", "Traced"],
+                type=pa.string(),
+            ),
+            "type": pa.array(
+                ["DN-test", "glia-test", "R-test", None],
+                type=pa.string(),
+            ),
+            "statusLabel": pa.array(
+                ["good", "good", "good", "uncertain"],
+                type=pa.string(),
+            ),
         }
     )
     transmitters = pa.table(
@@ -113,13 +122,21 @@ def write_fixture_source(config_root: Path, data_dir: Path) -> Path:
         }
     )
 
-    feather.write_feather(annotations, raw / "annotations.feather", compression="uncompressed")
+    feather.write_feather(
+        annotations,
+        raw / "annotations.feather",
+        compression="uncompressed",
+    )
     feather.write_feather(
         transmitters,
         raw / "neurotransmitters.feather",
         compression="uncompressed",
     )
-    feather.write_feather(edges, raw / "edges.feather", compression="uncompressed")
+    feather.write_feather(
+        edges,
+        raw / "edges.feather",
+        compression="uncompressed",
+    )
 
     hashes = {
         key: sha256_file(raw / filename)
@@ -130,7 +147,11 @@ def write_fixture_source(config_root: Path, data_dir: Path) -> Path:
         }.items()
     }
     write_fixture_profiles(config_root, hashes)
-    profile_hash = ProfileRegistry.from_directory(config_root).resolve("fixture_dataset").profile_hash
+    profile_hash = (
+        ProfileRegistry.from_directory(config_root)
+        .resolve("fixture_dataset")
+        .profile_hash
+    )
 
     manifest = {
         "schema": "flybox.dataset-manifest/v1",
@@ -218,7 +239,12 @@ def test_normalized_tables_are_lossless_and_simulation_neutral(tmp_path: Path) -
     catalog = feather.read_table(output / "catalog.feather")
     assert catalog["source_id"].to_pylist() == [10, 20, 30, 40]
     assert catalog["retained"].to_pylist() == [True, False, False, True]
-    assert catalog["neurotransmitter"].to_pylist() == ["acetylcholine", None, None, "gaba"]
+    assert catalog["neurotransmitter"].to_pylist() == [
+        "acetylcholine",
+        None,
+        None,
+        "gaba",
+    ]
 
     nodes = feather.read_table(output / "neurons.feather")
     assert nodes["node_index"].to_pylist() == [0, 1]
@@ -226,7 +252,11 @@ def test_normalized_tables_are_lossless_and_simulation_neutral(tmp_path: Path) -
 
     edge_reader = ipc.open_file(pa.memory_map(str(output / "edges.arrow"), "r"))
     edge_table = edge_reader.read_all()
-    assert edge_table.column_names == ["pre_index", "post_index", "contact_count"]
+    assert edge_table.column_names == [
+        "pre_index",
+        "post_index",
+        "contact_count",
+    ]
     assert edge_table["pre_index"].to_pylist() == [0, 1]
     assert edge_table["post_index"].to_pylist() == [1, 1]
     assert edge_table["contact_count"].to_pylist() == [5, 2]
@@ -248,9 +278,13 @@ def test_normalization_is_content_deterministic(tmp_path: Path) -> None:
     assert isinstance(first_outputs, dict)
     assert isinstance(second_outputs, dict)
     assert {
-        key: value["sha256"] for key, value in first_outputs.items() if isinstance(value, dict)
+        key: value["sha256"]
+        for key, value in first_outputs.items()
+        if isinstance(value, dict)
     } == {
-        key: value["sha256"] for key, value in second_outputs.items() if isinstance(value, dict)
+        key: value["sha256"]
+        for key, value in second_outputs.items()
+        if isinstance(value, dict)
     }
 
 
