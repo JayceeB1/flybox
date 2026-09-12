@@ -59,7 +59,8 @@ def load_profile(path: Path) -> Profile:
 
     unknown = sorted(set(raw) - _ALLOWED_KEYS)
     if unknown:
-        raise ProfileRegistryError(f"{path}: unknown top-level keys: {', '.join(map(str, unknown))}")
+        message = ", ".join(map(str, unknown))
+        raise ProfileRegistryError(f"{path}: unknown top-level keys: {message}")
 
     if raw.get("schema") != _PROFILE_SCHEMA:
         raise ProfileRegistryError(f"{path}: schema must be {_PROFILE_SCHEMA!r}")
@@ -132,7 +133,11 @@ class ProfileRegistry:
         for name, referenced_id in sorted(profile.references.items()):
             resolved = self._resolve(referenced_id, next_stack)
             references.append(
-                ResolvedReference(name=name, profile_id=resolved.id, profile_hash=resolved.profile_hash)
+                ResolvedReference(
+                    name=name,
+                    profile_id=resolved.id,
+                    profile_hash=resolved.profile_hash,
+                )
             )
 
         config = merge_defaults(profile.defaults, profile.config)
@@ -143,7 +148,11 @@ class ProfileRegistry:
             "version": profile.version,
             "config": config,
             "references": [
-                {"name": ref.name, "profile_id": ref.profile_id, "profile_hash": ref.profile_hash}
+                {
+                    "name": ref.name,
+                    "profile_id": ref.profile_id,
+                    "profile_hash": ref.profile_hash,
+                }
                 for ref in references
             ],
         }
