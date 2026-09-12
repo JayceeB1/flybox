@@ -1,0 +1,19 @@
+{
+  "schema": "flybox.provenance/v1",
+  "id": "motor-bridge-dna02-v0",
+  "kind": "motor_bridge",
+  "version": "0.1.0",
+  "evidence": "engineered",
+  "license_id": "Apache-2.0",
+  "code_revision": "0123456789abcdef",
+  "inclusion_state": "original",
+  "source": {
+    "project": "MaleCNS",
+    "release": "v1.0",
+    "locators": ["type:DNa02"]
+  },
+  "parameters": {
+    "aggregation_window_ms": 50,
+    "neuron_ids": ["720575940000000001", "720575940000000002"]
+  }
+}
