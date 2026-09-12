@@ -1,22 +1,42 @@
 # Initial development backlog
 
-This document gives the intended dependency order. GitHub issues are the execution source of truth; this file is the architectural map.
+GitHub issues are the execution source of truth. This document is the architectural dependency map.
+
+## Issue map
+
+| Issue | Scope | Phase |
+|---|---|---|
+| #1 | V0 epic | V0 |
+| #2 | license + scientific provenance gates | V0 |
+| #3 | MaleCNS v1.0 acquisition + source hashes | V0 |
+| #4 | deterministic graph normalization | V0 |
+| #5 | whole-graph MaleCNS neural backend | V0 |
+| #6 | FlyGym 2.x / NeuroMechFly body adapter | V0 |
+| #7 | identified DN -> locomotion bridge | V0 |
+| #8 | multi-clock scheduler + run store + replay | V0 |
+| #9 | closed-loop experiment runner + CLI | V0 |
+| #10 | causal baseline/ablation/control validation | V0 |
+| #11 | canonical performance benchmark | V0 |
+| #12 | Core <-> UE5 protocol spike | V0.5 |
+| #13 | compound-eye -> MaleCNS visual mapping | V1 |
+| #14 | native MaleCNS VNC -> motor-neuron path | V2 |
 
 ```mermaid
 flowchart TD
-    E[V0 epic]
-    L[License + provenance CI]
-    D[MaleCNS acquisition]
-    G[Deterministic graph normalization]
-    N[Whole-graph neural backend]
-    B[FlyGym 2.x body adapter]
-    M[Identified DN -> V0 motor bridge]
-    S[Multi-clock scheduler + run store]
-    C[Closed-loop runner]
-    V[Causal validation suite]
-    P[Performance benchmark]
-    U[UE5 protocol spike - V0.5]
-    R[Retina mapping research - V1]
+    E["#1 V0 epic"]
+    L["#2 License + provenance CI"]
+    D["#3 MaleCNS acquisition"]
+    G["#4 Graph normalization"]
+    N["#5 Whole-graph neural backend"]
+    B["#6 FlyGym 2.x body adapter"]
+    M["#7 Identified DN -> motor bridge"]
+    S["#8 Scheduler + run store"]
+    C["#9 Closed-loop runner"]
+    V["#10 Causal validation"]
+    P["#11 Performance benchmark"]
+    U["#12 UE5 protocol - V0.5"]
+    R["#13 Retina mapping - V1"]
+    X["#14 Native VNC/MN - V2"]
 
     E --> L
     E --> D
@@ -33,24 +53,26 @@ flowchart TD
     C --> P
     V --> U
     V --> R
+    V --> X
 ```
 
 ## V0 critical path
 
-1. license/provenance validation;
-2. MaleCNS acquisition;
-3. deterministic graph normalization;
-4. whole-graph neural backend;
-5. FlyGym 2.x body adapter (can run in parallel with 2-4);
-6. identified descending-neuron motor bridge;
-7. authoritative scheduler + run store;
-8. closed-loop experiment runner;
-9. causal validation suite;
-10. performance characterization.
+1. #2 license/provenance validation;
+2. #3 MaleCNS acquisition;
+3. #4 deterministic graph normalization;
+4. #5 whole-graph neural backend;
+5. #6 FlyGym 2.x body adapter (parallel with #3-#5);
+6. #7 identified descending-neuron motor bridge;
+7. #8 authoritative scheduler + run store;
+8. #9 closed-loop experiment runner;
+9. #10 causal validation suite;
+10. #11 performance characterization.
 
-## Post-V0 parallel research
+## Post-V0 research
 
-- UE5 viewer protocol and pose mirroring;
-- FlyGym ommatidium <-> MaleCNS retinal/optic-column mapping;
-- native VNC/motor-neuron output mapping;
-- proprioceptive/contact feedback identity/tuning research.
+- #12 UE5 viewer protocol and pose mirroring;
+- #13 FlyGym ommatidium <-> MaleCNS retinal/optic-column mapping;
+- #14 native VNC/motor-neuron output path and body feedback.
+
+Future work such as six-leg muscle actuation should be opened only after #14 establishes what the MaleCNS motor output actually provides and which physiological gaps remain.
