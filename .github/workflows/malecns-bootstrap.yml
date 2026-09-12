@@ -1,0 +1,46 @@
+name: MaleCNS hash bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type BOOTSTRAP-MALECNS-V1 to download ~1.2 GB and compute candidate source locks"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    if: ${{ inputs.confirm == 'BOOTSTRAP-MALECNS-V1' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install FlyBox
+        run: python -m pip install -e .
+      - name: Download official MaleCNS v1.0 sources and compute candidate locks
+        run: >-
+          python -m flybox.connectome.acquire malecns_v1
+          --bootstrap-hashes
+          --config-dir config
+          --data-dir data
+          --repo-root .
+      - name: Verify manifest structure
+        run: python -m flybox.provenance.validate data/malecns_v1/source-manifest.json
+      - name: Upload manifest and candidate lock only
+        uses: actions/upload-artifact@v4
+        with:
+          name: malecns-v1-source-lock-candidate
+          path: |
+            data/malecns_v1/source-manifest.json
+            data/malecns_v1/bootstrap-lock-candidate.json
+          if-no-files-found: error
+          retention-days: 14
