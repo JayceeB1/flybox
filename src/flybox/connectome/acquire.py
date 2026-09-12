@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import subprocess
+import urllib.error
 import urllib.request
 from collections.abc import Callable
 from contextlib import closing
@@ -118,6 +119,12 @@ def _download(
             )
         os.replace(partial, target)
         return actual, total
+    except AcquisitionError:
+        partial.unlink(missing_ok=True)
+        raise
+    except (OSError, urllib.error.URLError) as exc:
+        partial.unlink(missing_ok=True)
+        raise AcquisitionError(f"{spec.key}: download failed: {exc}") from exc
     except Exception:
         partial.unlink(missing_ok=True)
         raise
