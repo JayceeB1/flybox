@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import numpy as np
+import numpy.typing as npt
 import pyarrow as pa
 import pyarrow.feather as feather
 import pyarrow.ipc as ipc
@@ -74,15 +75,21 @@ def load_normalization_spec(config_root: Path, profile_id: str) -> Normalization
     resolved = registry.resolve(profile_id)
     if resolved.kind is not ProfileKind.NORMALIZATION:
         raise NormalizationError(
-            f"profile {profile_id!r} has kind {resolved.kind.value!r}, expected 'normalization'"
+            f"profile {profile_id!r} has kind {resolved.kind.value!r}, "
+            "expected 'normalization'"
         )
+
     refs = {reference.name: reference for reference in resolved.references}
     if set(refs) != {"dataset"}:
-        raise NormalizationError("normalization profile must reference exactly one 'dataset' profile")
+        raise NormalizationError(
+            "normalization profile must reference exactly one 'dataset' profile"
+        )
 
     config = _mapping(resolved.config, "config")
     if set(config) != {"node_policy", "edge_policy", "output"}:
-        raise NormalizationError("normalization config requires node_policy, edge_policy and output")
+        raise NormalizationError(
+            "normalization config requires node_policy, edge_policy and output"
+        )
 
     node = _mapping(config["node_policy"], "config.node_policy")
     if set(node) != {"require_nonempty_superclass", "exclude_status"}:
@@ -107,11 +114,15 @@ def load_normalization_spec(config_root: Path, profile_id: str) -> Normalization
         "config.edge_policy.retain_edges_between_retained_nodes",
     ):
         raise NormalizationError("canonical normalizer only supports retained-node induced edges")
+
     threshold = edge["additional_min_contact_count"]
     if threshold is not None and (
         not isinstance(threshold, int) or isinstance(threshold, bool) or threshold < 1
     ):
-        raise NormalizationError("additional_min_contact_count must be null or a positive integer")
+        raise NormalizationError(
+            "additional_min_contact_count must be null or a positive integer"
+        )
+
     ordering = edge["ordering"]
     if ordering != "upstream_source_row_order":
         raise NormalizationError("only deterministic upstream_source_row_order is supported")
@@ -131,7 +142,10 @@ def load_normalization_spec(config_root: Path, profile_id: str) -> Normalization
         ),
         exclude_status=tuple(exclude_status_raw),
         additional_min_contact_count=threshold,
-        retain_autapses=_bool(edge["retain_autapses"], "config.edge_policy.retain_autapses"),
+        retain_autapses=_bool(
+            edge["retain_autapses"],
+            "config.edge_policy.retain_autapses",
+        ),
         edge_ordering=ordering,
         catalog_filename=_safe_filename(output["catalog"], "config.output.catalog"),
         neurons_filename=_safe_filename(output["neurons"], "config.output.neurons"),
@@ -160,7 +174,10 @@ def _git_revision(repo_root: Path) -> str:
 def _atomic_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     partial = path.with_suffix(path.suffix + ".partial")
-    partial.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    partial.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     os.replace(partial, path)
 
 
@@ -194,11 +211,20 @@ def _load_and_verify_source_manifest(
         raise NormalizationError(f"unable to read source manifest: {exc}") from exc
     if not isinstance(manifest_raw, dict):
         raise NormalizationError("source manifest must be a JSON object")
+
     validate_manifest(manifest_raw)
-    if manifest_raw.get("id") != dataset.id or manifest_raw.get("release") != dataset.release:
-        raise NormalizationError("source manifest dataset identity does not match dataset profile")
+    if (
+        manifest_raw.get("id") != dataset.id
+        or manifest_raw.get("release") != dataset.release
+    ):
+        raise NormalizationError(
+            "source manifest dataset identity does not match dataset profile"
+        )
     if manifest_raw.get("profile_hash") != dataset.profile_hash:
-        raise NormalizationError("source manifest was not produced from the current dataset profile")
+        raise NormalizationError(
+            "source manifest was not produced from the current dataset profile"
+        )
+
     records_raw = manifest_raw.get("files")
     if not isinstance(records_raw, list):
         raise NormalizationError("source manifest files must be an array")
@@ -213,16 +239,26 @@ def _load_and_verify_source_manifest(
         record = records.get(file_spec.filename)
         if record is None:
             raise NormalizationError(f"source manifest missing {file_spec.filename}")
-        if record.get("url") != file_spec.url or record.get("license_id") != dataset.license_id:
-            raise NormalizationError(f"source manifest metadata mismatch for {file_spec.filename}")
+        if (
+            record.get("url") != file_spec.url
+            or record.get("license_id") != dataset.license_id
+        ):
+            raise NormalizationError(
+                f"source manifest metadata mismatch for {file_spec.filename}"
+            )
         source_path = raw_root / file_spec.filename
         if not source_path.exists():
             raise NormalizationError(f"missing raw source file {source_path}")
+
         digest, size = sha256_file(source_path)
         if record.get("sha256") != digest or record.get("bytes") != size:
-            raise NormalizationError(f"raw source file does not match manifest: {file_spec.filename}")
+            raise NormalizationError(
+                f"raw source file does not match manifest: {file_spec.filename}"
+            )
         if file_spec.expected_sha256 != digest or file_spec.expected_bytes != size:
-            raise NormalizationError(f"raw source file does not match pinned profile: {file_spec.filename}")
+            raise NormalizationError(
+                f"raw source file does not match pinned profile: {file_spec.filename}"
+            )
 
     manifest_hash, _ = sha256_file(manifest_path)
     return manifest_raw, manifest_hash
@@ -239,23 +275,32 @@ def _build_node_tables(
     annotations_path: Path,
     transmitters_path: Path,
     spec: NormalizationSpec,
-) -> tuple[pa.Table, pa.Table, np.ndarray[Any, np.dtype[np.uint64]], dict[str, Any]]:
+) -> tuple[pa.Table, pa.Table, npt.NDArray[np.uint64], dict[str, Any]]:
     annotations = feather.read_table(annotations_path)
     transmitters = feather.read_table(transmitters_path)
-    _required_columns(annotations, {"bodyId", "superclass", "status", "type"}, "annotations")
-    _required_columns(transmitters, {"body", "consensus_nt"}, "neurotransmitters")
+    _required_columns(
+        annotations,
+        {"bodyId", "superclass", "status", "type"},
+        "annotations",
+    )
+    _required_columns(
+        transmitters,
+        {"body", "consensus_nt"},
+        "neurotransmitters",
+    )
 
-    annotation_ids = exact_uint64_ids(annotations["bodyId"].to_numpy(zero_copy_only=False))
-    if len(annotation_ids) != len(require_unique_sorted(annotation_ids)):
-        raise NormalizationError("annotation ID accounting failure")
-    if len(annotation_ids) and len(np.unique(annotation_ids)) != len(annotation_ids):
-        raise NormalizationError("duplicate annotation body IDs")
+    annotation_ids = exact_uint64_ids(
+        annotations["bodyId"].to_numpy(zero_copy_only=False)
+    )
+    require_unique_sorted(annotation_ids)
 
     nt_ids = exact_uint64_ids(transmitters["body"].to_numpy(zero_copy_only=False))
-    if len(nt_ids) and len(np.unique(nt_ids)) != len(nt_ids):
-        raise NormalizationError("duplicate neurotransmitter body IDs")
+    require_unique_sorted(nt_ids)
     nt_values = transmitters["consensus_nt"].to_pylist()
-    nt_by_id = {int(body): _text(value) for body, value in zip(nt_ids, nt_values, strict=True)}
+    nt_by_id = {
+        int(body): _text(value)
+        for body, value in zip(nt_ids, nt_values, strict=True)
+    }
 
     superclass = annotations["superclass"].to_pylist()
     status = annotations["status"].to_pylist()
@@ -282,12 +327,14 @@ def _build_node_tables(
         body_id = int(annotation_ids[idx])
         current_superclass = _text(superclass[idx])
         current_status = _text(status[idx])
-        has_superclass = current_superclass is not None and bool(current_superclass.strip())
+        has_superclass = (
+            current_superclass is not None and bool(current_superclass.strip())
+        )
         excluded_non_neural = current_status in exclude_status
         retained = (
-            (has_superclass if spec.require_nonempty_superclass else True)
-            and not excluded_non_neural
-        )
+            has_superclass if spec.require_nonempty_superclass else True
+        ) and not excluded_non_neural
+
         if excluded_non_neural:
             kind = "non_neuronal"
             reason = "explicit_excluded_status"
@@ -323,11 +370,26 @@ def _build_node_tables(
     retained_ids = np.asarray(source_ids, dtype=np.uint64)[retained_mask]
     if not len(retained_ids):
         raise NormalizationError("node policy retained zero neurons")
+
     retained_catalog = catalog.filter(pa.array(retained_mask))
     nodes = retained_catalog.add_column(
         0,
         "node_index",
-        pa.array(np.arange(len(retained_ids), dtype=np.uint32), type=pa.uint32()),
+        pa.array(
+            np.arange(len(retained_ids), dtype=np.uint32),
+            type=pa.uint32(),
+        ),
+    )
+
+    superclass_counts = Counter(
+        value or "unknown"
+        for value, keep in zip(superclasses, retained_values, strict=True)
+        if keep
+    )
+    transmitter_counts = Counter(
+        value or "missing"
+        for value, keep in zip(nts, retained_values, strict=True)
+        if keep
     )
     report = {
         "source_annotation_rows": len(source_ids),
@@ -335,34 +397,38 @@ def _build_node_tables(
         "excluded_objects": int(len(source_ids) - len(retained_ids)),
         "object_kind_counts": dict(Counter(object_kind)),
         "inclusion_reason_counts": dict(Counter(inclusion_reason)),
-        "superclass_counts_retained": dict(
-            Counter(value or "unknown" for value, keep in zip(superclasses, retained_values) if keep)
-        ),
-        "neurotransmitter_counts_retained": dict(
-            Counter(value or "missing" for value, keep in zip(nts, retained_values) if keep)
-        ),
+        "superclass_counts_retained": dict(superclass_counts),
+        "neurotransmitter_counts_retained": dict(transmitter_counts),
     }
     return catalog, nodes, retained_ids, report
 
 
 def _edge_batch_arrays(
     batch: pa.RecordBatch,
-) -> tuple[np.ndarray[Any, Any], np.ndarray[Any, Any], np.ndarray[Any, Any]]:
+) -> tuple[npt.NDArray[Any], npt.NDArray[Any], npt.NDArray[Any]]:
     names = set(batch.schema.names)
     required = {"body_pre", "body_post", "weight"}
     missing = sorted(required - names)
     if missing:
-        raise NormalizationError(f"edges: missing required columns: {', '.join(missing)}")
-    pre = batch.column(batch.schema.get_field_index("body_pre")).to_numpy(zero_copy_only=False)
-    post = batch.column(batch.schema.get_field_index("body_post")).to_numpy(zero_copy_only=False)
-    weight = batch.column(batch.schema.get_field_index("weight")).to_numpy(zero_copy_only=False)
+        raise NormalizationError(
+            f"edges: missing required columns: {', '.join(missing)}"
+        )
+    pre = batch.column(batch.schema.get_field_index("body_pre")).to_numpy(
+        zero_copy_only=False
+    )
+    post = batch.column(batch.schema.get_field_index("body_post")).to_numpy(
+        zero_copy_only=False
+    )
+    weight = batch.column(batch.schema.get_field_index("weight")).to_numpy(
+        zero_copy_only=False
+    )
     return pre, post, weight
 
 
 def _normalize_edges(
     edges_path: Path,
     output_path: Path,
-    retained_ids: np.ndarray[Any, np.dtype[np.uint64]],
+    retained_ids: npt.NDArray[np.uint64],
     spec: NormalizationSpec,
 ) -> dict[str, int]:
     reader = ipc.open_file(pa.memory_map(str(edges_path), "r"))
@@ -397,18 +463,31 @@ def _normalize_edges(
                     pre = exact_uint64_ids(pre_raw)
                     post = exact_uint64_ids(post_raw)
                     weights = np.asarray(weight_raw)
-                    if weights.ndim != 1 or len(weights) != len(pre) or len(pre) != len(post):
+                    if (
+                        weights.ndim != 1
+                        or len(weights) != len(pre)
+                        or len(pre) != len(post)
+                    ):
                         raise NormalizationError("edge columns have inconsistent lengths")
                     if weights.dtype.kind not in "iu":
-                        raise NormalizationError("edge contact counts must be integer typed")
+                        raise NormalizationError(
+                            "edge contact counts must be integer typed"
+                        )
                     if weights.dtype.kind == "i" and np.any(weights < 1):
                         raise NormalizationError("edge contact counts must be positive")
+
                     weights_u64 = weights.astype(np.uint64, copy=False)
-                    if np.any(weights_u64 < 1) or np.any(weights_u64 > np.iinfo(np.uint32).max):
-                        raise NormalizationError("edge contact count outside uint32 range")
+                    if np.any(weights_u64 < 1) or np.any(
+                        weights_u64 > np.iinfo(np.uint32).max
+                    ):
+                        raise NormalizationError(
+                            "edge contact count outside uint32 range"
+                        )
 
                     stats["source_edge_rows"] += len(pre)
-                    stats["source_contacts"] += int(weights_u64.sum(dtype=np.uint64))
+                    stats["source_contacts"] += int(
+                        weights_u64.sum(dtype=np.uint64)
+                    )
                     stats["source_autapses"] += int(np.count_nonzero(pre == post))
 
                     pre_pos = np.searchsorted(retained_ids, pre)
@@ -417,16 +496,23 @@ def _normalize_edges(
                     post_valid = post_pos < len(retained_ids)
                     pre_match = np.zeros(len(pre), dtype=bool)
                     post_match = np.zeros(len(post), dtype=bool)
-                    pre_match[pre_valid] = retained_ids[pre_pos[pre_valid]] == pre[pre_valid]
-                    post_match[post_valid] = retained_ids[post_pos[post_valid]] == post[post_valid]
+                    pre_match[pre_valid] = (
+                        retained_ids[pre_pos[pre_valid]] == pre[pre_valid]
+                    )
+                    post_match[post_valid] = (
+                        retained_ids[post_pos[post_valid]] == post[post_valid]
+                    )
                     keep = pre_match & post_match
 
                     if spec.additional_min_contact_count is not None:
-                        threshold_remove = keep & (weights_u64 < spec.additional_min_contact_count)
+                        threshold_remove = keep & (
+                            weights_u64 < spec.additional_min_contact_count
+                        )
                         stats["additional_threshold_excluded_rows"] += int(
                             np.count_nonzero(threshold_remove)
                         )
                         keep &= ~threshold_remove
+
                     if not spec.retain_autapses:
                         autapse_remove = keep & (pre == post)
                         stats["autapse_policy_excluded_rows"] += int(
@@ -436,12 +522,17 @@ def _normalize_edges(
 
                     if not np.any(keep):
                         continue
+
                     pre_index = pre_pos[keep].astype(np.uint32)
                     post_index = post_pos[keep].astype(np.uint32)
                     counts = weights_u64[keep].astype(np.uint32)
                     stats["retained_edge_rows"] += len(pre_index)
-                    stats["retained_contacts"] += int(counts.sum(dtype=np.uint64))
-                    stats["retained_autapses"] += int(np.count_nonzero(pre[keep] == post[keep]))
+                    stats["retained_contacts"] += int(
+                        counts.sum(dtype=np.uint64)
+                    )
+                    stats["retained_autapses"] += int(
+                        np.count_nonzero(pre[keep] == post[keep])
+                    )
                     connected[pre_index] = True
                     connected[post_index] = True
                     writer.write_batch(
@@ -459,8 +550,12 @@ def _normalize_edges(
         partial.unlink(missing_ok=True)
         raise
 
-    stats["excluded_edge_rows"] = stats["source_edge_rows"] - stats["retained_edge_rows"]
-    stats["excluded_contacts"] = stats["source_contacts"] - stats["retained_contacts"]
+    stats["excluded_edge_rows"] = (
+        stats["source_edge_rows"] - stats["retained_edge_rows"]
+    )
+    stats["excluded_contacts"] = (
+        stats["source_contacts"] - stats["retained_contacts"]
+    )
     stats["isolated_retained_neurons"] = int(np.count_nonzero(~connected))
     return stats
 
@@ -478,12 +573,19 @@ def normalize_malecns(
     dataset = load_dataset_spec(config_root, dataset_profile_id)
     spec = load_normalization_spec(config_root, normalization_profile_id)
     if not dataset.fully_pinned:
-        raise NormalizationError("dataset profile must be fully pinned before normalization")
+        raise NormalizationError(
+            "dataset profile must be fully pinned before normalization"
+        )
     if spec.dataset_profile_hash != dataset.profile_hash:
-        raise NormalizationError("normalization profile references a different dataset profile hash")
+        raise NormalizationError(
+            "normalization profile references a different dataset profile hash"
+        )
 
     dataset_root = data_dir / dataset.id
-    _, source_manifest_hash = _load_and_verify_source_manifest(dataset_root, dataset)
+    _, source_manifest_hash = _load_and_verify_source_manifest(
+        dataset_root,
+        dataset,
+    )
     raw_root = dataset_root / "raw"
     output_root = dataset_root / "normalized"
 
@@ -511,7 +613,11 @@ def normalize_malecns(
         "edges": edges_path,
     }.items():
         digest, size = sha256_file(path)
-        outputs[key] = {"path": path.name, "sha256": digest, "bytes": size}
+        outputs[key] = {
+            "path": path.name,
+            "sha256": digest,
+            "bytes": size,
+        }
 
     manifest: dict[str, Any] = {
         "schema": "flybox.provenance/v1",
