@@ -21,10 +21,12 @@ GitHub issues are the execution source of truth. This document is the architectu
 | #13 | compound-eye -> MaleCNS visual mapping | V1 |
 | #14 | native MaleCNS VNC -> motor-neuron path | V2 |
 | #15 | six-leg motor-neuron -> muscle/tendon actuation | V3 |
+| #16 | lightweight CI/repository conventions | V0 |
 
 ```mermaid
 flowchart TD
     E["#1 V0 epic"]
+    Q["#16 Repo CI/conventions"]
     L["#2 License + provenance CI"]
     D["#3 MaleCNS acquisition"]
     G["#4 Graph normalization"]
@@ -40,6 +42,7 @@ flowchart TD
     X["#14 Native VNC/MN - V2"]
     Y["#15 Six-leg muscles - V3"]
 
+    E --> Q
     E --> L
     E --> D
     D --> G
@@ -61,7 +64,7 @@ flowchart TD
 
 ## V0 critical path
 
-1. #2 license/provenance validation;
+1. #2 license/provenance validation + #16 lightweight repository CI/conventions;
 2. #3 MaleCNS acquisition;
 3. #4 deterministic graph normalization;
 4. #5 whole-graph neural backend;
