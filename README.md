@@ -14,8 +14,8 @@ The first milestone is a headless closed-loop prototype:
 
 ```text
 MaleCNS v1.0
-  166.7k retained neurons
   whole brain + VNC
+  exact retained graph defined by a versioned normalization profile
         |
         v
 connectome-constrained neural model
@@ -38,7 +38,7 @@ UE5 is deliberately **not** the simulation authority. It is planned as an option
 
 ## Principles
 
-1. **Measured, inferred, modeled, and engineered are never conflated.** Every scientific mapping must declare its evidence class and provenance.
+1. **Measured, inferred, modeled, engineered, and derived are never conflated.** Every scientific mapping must declare its evidence class and provenance.
 2. **MuJoCo owns body physics.** A future UE5 client mirrors authoritative state; it does not silently run a second physics truth.
 3. **The nervous system remains inspectable.** No hidden policy or LLM may replace the connectome in the primary experimental path.
 4. **V0 may use a temporary motor bridge, but the target architecture preserves MaleCNS brain -> VNC -> motor-neuron pathways.**
@@ -49,14 +49,15 @@ UE5 is deliberately **not** the simulation authority. It is planned as an option
 
 ```text
 src/flybox/             stable core contracts and runtime
-flybox_core/            headless orchestration (planned)
-connectome/              MaleCNS acquisition/normalization (planned)
-brain/                   neural engine adapters (planned)
-body/                    FlyGym/NeuroMechFly adapters (planned)
+connectome/              MaleCNS acquisition/normalization assets (planned)
+brain/                   native neural engine sources/adapters (planned)
+body/                    body-backend integration assets (planned)
 experiments/             reproducible experiment definitions (planned)
 viewer/ue5/              optional UE5 client (post-V0)
 docs/                    architecture, science boundaries, ADRs
 ```
+
+Python runtime modules remain under `src/flybox/`; top-level component directories are only for backend-native sources, configurations, schemas, or other assets that do not belong inside the Python package.
 
 The layout is intentionally modular: the MaleCNS engine, body backend, sensory bridge, motor bridge, experiment runner, and viewer must be replaceable without changing the scientific record format.
 
