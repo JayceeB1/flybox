@@ -40,13 +40,15 @@ def write_dataset_profile(
         expected = digest(payload)
         if corrupt_expected_hash and index == 0:
             expected = "0" * 64
+        expected_hash = f'"{expected}"' if pinned else "null"
+        expected_bytes = str(len(payload)) if pinned else "null"
         lines.extend(
             [
                 f"    {key}:",
                 f"      filename: {key}.bin",
                 f"      url: https://fixture.invalid/{key}.bin",
-                f"      expected_sha256: {expected if pinned else 'null'}",
-                f"      expected_bytes: {len(payload) if pinned else 'null'}",
+                f"      expected_sha256: {expected_hash}",
+                f"      expected_bytes: {expected_bytes}",
             ]
         )
     path = root / "datasets" / "fixture.yaml"
@@ -65,7 +67,9 @@ class FixtureOpener:
         return io.BytesIO(self.files[name])
 
 
-def test_pinned_download_writes_valid_manifest_and_reuses_verified_cache(tmp_path: Path) -> None:
+def test_pinned_download_writes_valid_manifest_and_reuses_verified_cache(
+    tmp_path: Path,
+) -> None:
     files = {"annotations": b"abc", "edges": b"defgh"}
     config = tmp_path / "config"
     data = tmp_path / "data"
@@ -133,7 +137,9 @@ def test_verify_only_requires_existing_files(tmp_path: Path) -> None:
         )
 
 
-def test_unpinned_profile_requires_explicit_bootstrap_and_emits_candidate(tmp_path: Path) -> None:
+def test_unpinned_profile_requires_explicit_bootstrap_and_emits_candidate(
+    tmp_path: Path,
+) -> None:
     files = {"annotations": b"abc", "edges": b"xyz"}
     config = tmp_path / "config"
     data = tmp_path / "data"
@@ -181,5 +187,8 @@ def test_official_malecns_profile_uses_reviewed_v1_sources() -> None:
     assert spec.license_id == "CC-BY-4.0"
     assert spec.source_page == "https://male-cns.janelia.org/download/"
     assert {item.key for item in spec.files} == {"annotations", "neurotransmitters", "edges"}
-    assert all("/flyem-male-cns/v1.0/connectome-data/flat-connectome/" in item.url for item in spec.files)
+    assert all(
+        "/flyem-male-cns/v1.0/connectome-data/flat-connectome/" in item.url
+        for item in spec.files
+    )
     assert not spec.fully_pinned
