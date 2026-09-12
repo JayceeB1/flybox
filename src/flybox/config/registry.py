@@ -67,13 +67,16 @@ def load_profile(path: Path) -> Profile:
 
     profile_id = raw.get("id")
     version = raw.get("version")
+    raw_kind = raw.get("kind")
     if not isinstance(profile_id, str) or not profile_id:
         raise ProfileRegistryError(f"{path}: id must be a non-empty string")
     if not isinstance(version, str) or not version:
         raise ProfileRegistryError(f"{path}: version must be a non-empty string")
+    if not isinstance(raw_kind, str) or not raw_kind:
+        raise ProfileRegistryError(f"{path}: kind must be a non-empty string")
 
     try:
-        kind = ProfileKind(raw.get("kind"))
+        kind = ProfileKind(raw_kind)
     except ValueError as exc:
         allowed = ", ".join(item.value for item in ProfileKind)
         raise ProfileRegistryError(f"{path}: kind must be one of {allowed}") from exc
