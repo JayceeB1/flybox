@@ -12,7 +12,7 @@ from collections.abc import Callable
 from contextlib import closing
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Protocol
+from typing import Protocol, cast
 
 from flybox.provenance.schema import validate_manifest
 
@@ -35,7 +35,8 @@ Opener = Callable[[str], ResponseLike]
 
 
 def _default_opener(url: str) -> ResponseLike:
-    return urllib.request.urlopen(url, timeout=60)  # noqa: S310 - registry URLs are reviewed
+    response = urllib.request.urlopen(url, timeout=60)  # noqa: S310 - reviewed registry URLs
+    return cast(ResponseLike, response)
 
 
 def _git_revision(repo_root: Path) -> str:
