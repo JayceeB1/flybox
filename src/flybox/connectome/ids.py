@@ -13,11 +13,24 @@ class BiologicalIdError(ValueError):
     """A biological identifier could not be represented losslessly."""
 
 
-def exact_uint64_ids(values: Iterable[Any]) -> npt.NDArray[np.uint64]:
+def exact_uint64_ids(values: Iterable[Any] | npt.NDArray[Any]) -> npt.NDArray[np.uint64]:
     """Convert integer/decimal-string IDs to uint64 without any float round-trip."""
 
+    if isinstance(values, np.ndarray):
+        if values.ndim != 1:
+            raise BiologicalIdError("biological ID array must be one-dimensional")
+        if values.dtype.kind in "iu":
+            if values.dtype.kind == "i" and np.any(values < 0):
+                raise BiologicalIdError("negative biological IDs are forbidden")
+            return values.astype(np.uint64, copy=False)
+        if values.dtype.kind == "f":
+            raise BiologicalIdError("floating-point IDs are forbidden")
+        iterable: Iterable[Any] = values.tolist()
+    else:
+        iterable = values
+
     result: list[int] = []
-    for index, value in enumerate(values):
+    for index, value in enumerate(iterable):
         if isinstance(value, bool):
             raise BiologicalIdError(f"ID[{index}]: booleans are not biological IDs")
         if isinstance(value, (float, np.floating)):
@@ -27,7 +40,9 @@ def exact_uint64_ids(values: Iterable[Any]) -> npt.NDArray[np.uint64]:
         elif isinstance(value, str) and value.isascii() and value.isdecimal():
             number = int(value, 10)
         else:
-            raise BiologicalIdError(f"ID[{index}]: expected non-negative integer or decimal string")
+            raise BiologicalIdError(
+                f"ID[{index}]: expected non-negative integer or decimal string"
+            )
         if number < 0 or number > np.iinfo(np.uint64).max:
             raise BiologicalIdError(f"ID[{index}]: outside uint64 range")
         result.append(number)
