@@ -63,6 +63,14 @@ def _nonempty_string(value: Any, path: str) -> str:
     return value.strip()
 
 
+def _safe_filename(value: Any, path: str) -> str:
+    filename = _nonempty_string(value, path)
+    candidate = Path(filename)
+    if candidate.is_absolute() or candidate.name != filename or filename in {".", ".."}:
+        raise DatasetRegistryError(f"{path}: expected a basename without path components")
+    return filename
+
+
 def _https_url(value: Any, path: str) -> str:
     url = _nonempty_string(value, path)
     parsed = urlparse(url)
@@ -136,7 +144,7 @@ def load_dataset_spec(config_root: Path, profile_id: str) -> DatasetSpec:
         files.append(
             DatasetFileSpec(
                 key=key,
-                filename=_nonempty_string(
+                filename=_safe_filename(
                     raw.get("filename"),
                     f"config.files.{key}.filename",
                 ),
