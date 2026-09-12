@@ -1,0 +1,21 @@
+schema: flybox.profile/v1
+kind: normalization
+id: malecns_v1_canonical
+version: "1"
+references:
+  dataset: malecns_v1
+config:
+  node_policy:
+    require_nonempty_superclass: true
+    exclude_status:
+      - Glia
+  edge_policy:
+    retain_edges_between_retained_nodes: true
+    additional_min_contact_count: null
+    retain_autapses: true
+    ordering: upstream_source_row_order
+  output:
+    catalog: catalog.feather
+    neurons: neurons.feather
+    edges: edges.arrow
+    manifest: normalization-manifest.json
