@@ -22,6 +22,7 @@ GitHub issues are the execution source of truth. This document is the architectu
 | #14 | native MaleCNS VNC -> motor-neuron path | V2 |
 | #15 | six-leg motor-neuron -> muscle/tendon actuation | V3 |
 | #16 | lightweight CI/repository conventions | V0 |
+| #17 | typed profile registry + immutable config | V0 |
 
 ```mermaid
 flowchart TD
@@ -30,6 +31,7 @@ flowchart TD
     L["#2 License + provenance CI"]
     D["#3 MaleCNS acquisition"]
     G["#4 Graph normalization"]
+    F["#17 Profile registry/config"]
     N["#5 Whole-graph neural backend"]
     B["#6 FlyGym 2.x body adapter"]
     M["#7 Identified DN -> motor bridge"]
@@ -46,6 +48,12 @@ flowchart TD
     E --> L
     E --> D
     D --> G
+    E --> F
+    F --> N
+    F --> B
+    F --> M
+    F --> S
+    F --> C
     G --> N
     E --> B
     N --> M
@@ -65,15 +73,16 @@ flowchart TD
 ## V0 critical path
 
 1. #2 license/provenance validation + #16 lightweight repository CI/conventions;
-2. #3 MaleCNS acquisition;
-3. #4 deterministic graph normalization;
-4. #5 whole-graph neural backend;
-5. #6 FlyGym 2.x body adapter (parallel with #3-#5);
-6. #7 identified descending-neuron motor bridge;
-7. #8 authoritative scheduler + run store;
-8. #9 closed-loop experiment runner;
-9. #10 causal validation suite;
-10. #11 performance characterization.
+2. #17 typed profile registry and immutable resolved configuration;
+3. #3 MaleCNS acquisition;
+4. #4 deterministic graph normalization;
+5. #5 whole-graph neural backend;
+6. #6 FlyGym 2.x body adapter (parallel with #3-#5 once #17 contracts exist);
+7. #7 identified descending-neuron motor bridge;
+8. #8 authoritative scheduler + run store;
+9. #9 closed-loop experiment runner;
+10. #10 causal validation suite;
+11. #11 performance characterization.
 
 ## Post-V0 research
 
