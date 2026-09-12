@@ -1,0 +1,14 @@
+FlyBox
+Copyright 2026 FlyBox contributors
+
+This product includes original FlyBox software licensed under the Apache License,
+Version 2.0.
+
+FlyBox is designed to interoperate with third-party software and scientific data
+that are NOT relicensed by the FlyBox license. In particular, MaleCNS datasets,
+FlyGym/NeuroMechFly, MuJoCo, Unreal Engine, external papers, models, assets, and
+any subsequently adapted third-party code remain subject to their own licenses,
+attribution requirements, and terms.
+
+See THIRD_PARTY.md and docs/science/PROVENANCE_POLICY.md for the authoritative
+project-level inventory and provenance rules.
