@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from flybox.connectome.acquire import AcquisitionError, acquire_dataset
-from flybox.connectome.registry import load_dataset_spec
+from flybox.connectome.registry import DatasetRegistryError, load_dataset_spec
 from flybox.provenance.schema import validate_manifest
 
 
@@ -22,7 +22,7 @@ def write_dataset_profile(
     *,
     pinned: bool,
     corrupt_expected_hash: bool = False,
-) -> None:
+) -> Path:
     lines = [
         "schema: flybox.profile/v1",
         "kind: dataset",
@@ -54,6 +54,7 @@ def write_dataset_profile(
     path = root / "datasets" / "fixture.yaml"
     path.parent.mkdir(parents=True)
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
 
 
 class FixtureOpener:
@@ -65,6 +66,22 @@ class FixtureOpener:
         self.calls.append(url)
         name = url.rsplit("/", 1)[-1].removesuffix(".bin")
         return io.BytesIO(self.files[name])
+
+
+class InterruptingStream:
+    def __init__(self) -> None:
+        self.reads = 0
+        self.closed = False
+
+    def read(self, size: int = -1) -> bytes:
+        del size
+        self.reads += 1
+        if self.reads == 1:
+            return b"partial"
+        raise ConnectionError("simulated network interruption")
+
+    def close(self) -> None:
+        self.closed = True
 
 
 def test_pinned_download_writes_valid_manifest_and_reuses_verified_cache(
@@ -103,6 +120,28 @@ def test_download_hash_mismatch_fails_and_removes_partial(tmp_path: Path) -> Non
         acquire_dataset(spec, data, code_revision="deadbeef", opener=FixtureOpener(files))
 
     raw = data / "fixture_dataset" / "raw"
+    assert not (raw / "annotations.bin").exists()
+    assert not (raw / "annotations.bin.partial").exists()
+
+
+def test_network_interruption_fails_closed_and_removes_partial(tmp_path: Path) -> None:
+    files = {"annotations": b"complete-content"}
+    config = tmp_path / "config"
+    data = tmp_path / "data"
+    write_dataset_profile(config, files, pinned=True)
+    spec = load_dataset_spec(config, "fixture_dataset")
+    stream = InterruptingStream()
+
+    with pytest.raises(AcquisitionError, match="download failed"):
+        acquire_dataset(
+            spec,
+            data,
+            code_revision="deadbeef",
+            opener=lambda _url: stream,
+        )
+
+    raw = data / "fixture_dataset" / "raw"
+    assert stream.closed
     assert not (raw / "annotations.bin").exists()
     assert not (raw / "annotations.bin.partial").exists()
 
@@ -179,6 +218,30 @@ def test_bootstrap_and_verify_only_are_mutually_exclusive(tmp_path: Path) -> Non
             bootstrap_hashes=True,
             opener=FixtureOpener(files),
         )
+
+
+def test_registry_rejects_non_https_source_url(tmp_path: Path) -> None:
+    config = tmp_path / "config"
+    path = write_dataset_profile(config, {"annotations": b"abc"}, pinned=True)
+    text = path.read_text(encoding="utf-8").replace(
+        "https://fixture.invalid/annotations.bin",
+        "file:///tmp/annotations.bin",
+    )
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(DatasetRegistryError, match="absolute HTTPS URL"):
+        load_dataset_spec(config, "fixture_dataset")
+
+
+def test_registry_rejects_path_traversal_filename(tmp_path: Path) -> None:
+    config = tmp_path / "config"
+    path = write_dataset_profile(config, {"annotations": b"abc"}, pinned=True)
+    text = path.read_text(encoding="utf-8").replace(
+        "filename: annotations.bin",
+        "filename: ../../escape.bin",
+    )
+    path.write_text(text, encoding="utf-8")
+    with pytest.raises(DatasetRegistryError, match="expected a basename"):
+        load_dataset_spec(config, "fixture_dataset")
 
 
 def test_official_malecns_profile_uses_reviewed_v1_sources() -> None:
