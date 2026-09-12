@@ -20,6 +20,7 @@ GitHub issues are the execution source of truth. This document is the architectu
 | #12 | Core <-> UE5 protocol spike | V0.5 |
 | #13 | compound-eye -> MaleCNS visual mapping | V1 |
 | #14 | native MaleCNS VNC -> motor-neuron path | V2 |
+| #15 | six-leg motor-neuron -> muscle/tendon actuation | V3 |
 
 ```mermaid
 flowchart TD
@@ -37,6 +38,7 @@ flowchart TD
     U["#12 UE5 protocol - V0.5"]
     R["#13 Retina mapping - V1"]
     X["#14 Native VNC/MN - V2"]
+    Y["#15 Six-leg muscles - V3"]
 
     E --> L
     E --> D
@@ -54,6 +56,7 @@ flowchart TD
     V --> U
     V --> R
     V --> X
+    X --> Y
 ```
 
 ## V0 critical path
@@ -73,6 +76,5 @@ flowchart TD
 
 - #12 UE5 viewer protocol and pose mirroring;
 - #13 FlyGym ommatidium <-> MaleCNS retinal/optic-column mapping;
-- #14 native VNC/motor-neuron output path and body feedback.
-
-Future work such as six-leg muscle actuation should be opened only after #14 establishes what the MaleCNS motor output actually provides and which physiological gaps remain.
+- #14 native VNC/motor-neuron output path and body feedback;
+- #15 six-leg motor-neuron -> muscle/tendon actuation once #14 and upstream muscle support justify it.
