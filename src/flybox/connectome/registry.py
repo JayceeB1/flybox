@@ -125,7 +125,10 @@ def load_dataset_spec(config_root: Path, profile_id: str) -> DatasetSpec:
         files.append(
             DatasetFileSpec(
                 key=key,
-                filename=_nonempty_string(raw.get("filename"), f"config.files.{key}.filename"),
+                filename=_nonempty_string(
+                    raw.get("filename"),
+                    f"config.files.{key}.filename",
+                ),
                 url=_nonempty_string(raw.get("url"), f"config.files.{key}.url"),
                 expected_sha256=_optional_sha256(
                     raw.get("expected_sha256"),
@@ -145,7 +148,8 @@ def load_dataset_spec(config_root: Path, profile_id: str) -> DatasetSpec:
     for item in files:
         if (item.expected_sha256 is None) != (item.expected_bytes is None):
             raise DatasetRegistryError(
-                f"config.files.{item.key}: expected_sha256 and expected_bytes must be pinned together"
+                f"config.files.{item.key}: expected_sha256 and expected_bytes "
+                "must be pinned together"
             )
 
     return DatasetSpec(
