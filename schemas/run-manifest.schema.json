@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://flybox.dev/schemas/run-manifest.schema.json",
+  "title": "FlyBox run manifest v1",
+  "type": "object",
+  "required": ["schema", "run_id", "code_revision", "configuration_hash", "components"],
+  "properties": {
+    "schema": {"const": "flybox.run-manifest/v1"},
+    "run_id": {"type": "string", "minLength": 1},
+    "code_revision": {"type": "string", "minLength": 1},
+    "configuration_hash": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "components": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+  },
+  "additionalProperties": true
+}

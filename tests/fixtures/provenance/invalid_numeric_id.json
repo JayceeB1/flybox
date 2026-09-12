@@ -1,0 +1,13 @@
+{
+  "schema": "flybox.provenance/v1",
+  "id": "bad-biological-id",
+  "kind": "test",
+  "version": "0.0.1",
+  "evidence": "measured",
+  "license_id": "CC-BY-4.0",
+  "code_revision": "deadbeef",
+  "inclusion_state": "data",
+  "parameters": {
+    "neuron_ids": [720575940000000001]
+  }
+}
