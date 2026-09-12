@@ -244,14 +244,28 @@ def test_registry_rejects_path_traversal_filename(tmp_path: Path) -> None:
         load_dataset_spec(config, "fixture_dataset")
 
 
-def test_official_malecns_profile_uses_reviewed_v1_sources() -> None:
+def test_official_malecns_profile_has_reviewed_v1_source_locks() -> None:
     spec = load_dataset_spec(Path("config"), "malecns_v1")
     assert spec.release == "MaleCNS v1.0"
     assert spec.license_id == "CC-BY-4.0"
     assert spec.source_page == "https://male-cns.janelia.org/download/"
-    assert {item.key for item in spec.files} == {"annotations", "neurotransmitters", "edges"}
+    assert spec.fully_pinned
+
+    by_key = {item.key: item for item in spec.files}
+    assert set(by_key) == {"annotations", "neurotransmitters", "edges"}
     assert all(
         "/flyem-male-cns/v1.0/connectome-data/flat-connectome/" in item.url
         for item in spec.files
     )
-    assert not spec.fully_pinned
+    assert by_key["annotations"].expected_sha256 == (
+        "2177e246113e4cfbf1e7772ec37c6da1955ff22e8063d0b1f833101f99a9a3b2"
+    )
+    assert by_key["annotations"].expected_bytes == 14483314
+    assert by_key["neurotransmitters"].expected_sha256 == (
+        "95c9289220663abeb3409f3ad9e5a7f8a53f8093f5139d15502cd08da8879621"
+    )
+    assert by_key["neurotransmitters"].expected_bytes == 43282834
+    assert by_key["edges"].expected_sha256 == (
+        "e35da783d1c686b2b58b3b87cd6a403ae43bfcfba8bff28e08ef752c1a56afc1"
+    )
+    assert by_key["edges"].expected_bytes == 1051241946
